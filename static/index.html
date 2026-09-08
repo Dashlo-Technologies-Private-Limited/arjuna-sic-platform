@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ARJUNA — Autonomous Short Interval Control Cockpit</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800;900&family=Rajdhani:wght@500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --neon-emerald: #10b981;
+      --neon-cyan: #06b6d4;
+      --hud-dark: #030712;
+    }
+    body {
+      font-family: 'Rajdhani', sans-serif;
+      background-color: #020617;
+      background-image: 
+        radial-gradient(circle at 50% 0%, rgba(16, 185, 129, 0.08) 0%, transparent 50%),
+        radial-gradient(circle at 100% 100%, rgba(6, 182, 212, 0.05) 0%, transparent 40%),
+        linear-gradient(rgba(15, 23, 42, 0.3) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(15, 23, 42, 0.3) 1px, transparent 1px);
+      background-size: 100% 100%, 100% 100%, 30px 30px, 30px 30px;
+    }
+    .font-hud { font-family: 'Orbitron', monospace; }
+    .font-mono-code { font-family: 'JetBrains Mono', monospace; }
+
+    /* Scanline Overlay */
+    .scanlines::before {
+      content: " ";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+      background-size: 100% 3px, 6px 100%;
+      pointer-events: none;
+      z-index: 60;
+    }
+
+    /* Cybernetic Animations */
+    @keyframes radar-sweep {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .animate-radar { animation: radar-sweep 8s linear infinite; transform-origin: center; }
+
+    @keyframes pulse-node {
+      0%, 100% { opacity: 1; transform: scale(1); filter: drop-shadow(0 0 6px #10b981); }
+      50% { opacity: 0.4; transform: scale(0.92); filter: drop-shadow(0 0 1px #10b981); }
+    }
+    .animate-node { animation: pulse-node 2.2s infinite ease-in-out; }
+
+    .glow-box-emerald {
+      box-shadow: 0 0 25px -5px rgba(16, 185, 129, 0.25), inset 0 0 15px -3px rgba(16, 185, 129, 0.1);
+    }
+    .glow-box-cyan {
+      box-shadow: 0 0 25px -5px rgba(6, 182, 212, 0.2), inset 0 0 15px -3px rgba(6, 182, 212, 0.08);
+    }
+    .hud-border {
+      position: relative;
+      border: 1px solid rgba(51, 65, 85, 0.7);
+      background: rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(12px);
+    }
+    .hud-border::before {
+      content: '';
+      position: absolute;
+      top: -1px; left: -1px; width: 8px; height: 8px;
+      border-top: 2px solid #10b981; border-left: 2px solid #10b981;
+    }
+    .hud-border::after {
+      content: '';
+      position: absolute;
+      bottom: -1px; right: -1px; width: 8px; height: 8px;
+      border-bottom: 2px solid #06b6d4; border-right: 2px solid #06b6d4;
+    }
+  </style>
+</head>
+<body class="text-slate-100 min-h-screen scanlines antialiased selection:bg-emerald-500 selection:text-black">
+
+  <!-- ============================================================== -->
+  <!-- 1. SPLASH / ULTRA-ADVANCED ARJUNA HUD LOGO SCREEN              -->
+  <!-- ============================================================== -->
+  <section id="splash-screen" class="fixed inset-0 z-50 bg-[#020617]/95 backdrop-blur-xl flex flex-col items-center justify-center p-6 text-center transition-all duration-700">
+    <div class="max-w-3xl mx-auto flex flex-col items-center space-y-6">
+      
+      <!-- ULTRA-ADVANCED ARJUNA INSIGNIA -->
+      <div class="relative w-64 h-64 flex items-center justify-center">
+        <div class="absolute inset-0 rounded-full bg-emerald-500/15 blur-3xl animate-pulse"></div>
+        <div class="absolute -inset-6 rounded-full bg-cyan-500/10 blur-3xl"></div>
+
+        <svg class="w-60 h-60 relative z-10 filter drop-shadow-[0_0_20px_rgba(16,185,129,0.5)]" viewBox="0 0 240 240" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="bowGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#6ee7b7" />
+              <stop offset="40%" stop-color="#10b981" />
+              <stop offset="100%" stop-color="#065f46" />
+            </linearGradient>
+            <linearGradient id="arrowLaser" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#064e3b" stop-opacity="0" />
+              <stop offset="50%" stop-color="#34d399" />
+              <stop offset="90%" stop-color="#ffffff" />
+            </linearGradient>
+            <radialGradient id="targetCore" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#34d399" stop-opacity="0.9" />
+              <stop offset="40%" stop-color="#059669" stop-opacity="0.5" />
+              <stop offset="100%" stop-color="#022c22" stop-opacity="0" />
+            </radialGradient>
+          </defs>
+
+          <!-- Outer Rotating Telemetry Ring -->
+          <circle cx="120" cy="120" r="106" stroke="#1e293b" stroke-width="1.5" stroke-dasharray="4 6" />
+          <g class="animate-radar">
+            <circle cx="120" cy="120" r="98" stroke="#10b981" stroke-width="1.2" stroke-opacity="0.4" stroke-dasharray="16 12 4 12" />
+            <line x1="120" y1="22" x2="120" y2="30" stroke="#34d399" stroke-width="2" />
+            <line x1="120" y1="210" x2="120" y2="218" stroke="#34d399" stroke-width="2" />
+            <line x1="22" y1="120" x2="30" y2="120" stroke="#34d399" stroke-width="2" />
+            <line x1="210" y1="120" x2="218" y2="120" stroke="#34d399" stroke-width="2" />
+          </g>
+
+          <!-- Hexagonal Decline Shaft Boundary -->
+          <polygon points="120,38 188,78 188,162 120,202 52,162 52,78" stroke="#334155" stroke-width="1.5" fill="none" opacity="0.4" />
+          <polygon points="120,54 174,86 174,154 120,186 66,154 66,86" stroke="#047857" stroke-width="1" fill="none" opacity="0.2" stroke-dasharray="4 4" />
+
+          <!-- Gandiva Bow: Heavy Composite Arc -->
+          <path d="M 75 200 C 25 155 25 85 75 40" stroke="url(#bowGradient)" stroke-width="6.5" stroke-linecap="round" />
+          <path d="M 82 184 C 42 148 42 92 82 56" stroke="#6ee7b7" stroke-width="2" stroke-linecap="round" opacity="0.8" />
+          
+          <!-- Reinforced Nodes on Bow Riser -->
+          <circle cx="44" cy="120" r="5" fill="#022c22" stroke="#34d399" stroke-width="2.5" class="animate-node" />
+          <circle cx="53" cy="80" r="3.5" fill="#10b981" />
+          <circle cx="53" cy="160" r="3.5" fill="#10b981" />
+
+          <!-- Digital High-Tension Energy Bowstring -->
+          <line x1="75" y1="40" x2="62" y2="120" stroke="#34d399" stroke-width="1.5" stroke-opacity="0.7" stroke-dasharray="3 3" />
+          <line x1="75" y1="200" x2="62" y2="120" stroke="#34d399" stroke-width="1.5" stroke-opacity="0.7" stroke-dasharray="3 3" />
+
+          <!-- Pakshi-Drishti (Target Reticle Optics) -->
+          <circle cx="152" cy="120" r="38" fill="url(#targetCore)" />
+          <circle cx="152" cy="120" r="34" stroke="#06b6d4" stroke-width="1.5" stroke-opacity="0.6" stroke-dasharray="8 4" />
+          <circle cx="152" cy="120" r="20" stroke="#34d399" stroke-width="1.5" />
+          
+          <!-- Crosshair Grid -->
+          <line x1="152" y1="92" x2="152" y2="102" stroke="#6ee7b7" stroke-width="2" stroke-linecap="round" />
+          <line x1="152" y1="138" x2="152" y2="148" stroke="#6ee7b7" stroke-width="2" stroke-linecap="round" />
+          <line x1="124" y1="120" x2="134" y2="120" stroke="#6ee7b7" stroke-width="2" stroke-linecap="round" />
+          <line x1="170" y1="120" x2="180" y2="120" stroke="#6ee7b7" stroke-width="2" stroke-linecap="round" />
+          
+          <circle cx="152" cy="120" r="5" fill="#ffffff" filter="drop-shadow(0 0 5px #10b981)" />
+          <circle cx="152" cy="120" r="2" fill="#047857" />
+
+          <!-- Kinetic Arrow (Vector of Decision Acceleration) -->
+          <path d="M 52 112 L 66 120 L 52 128" stroke="#34d399" stroke-width="2.5" stroke-linejoin="round" />
+          <line x1="62" y1="120" x2="168" y2="120" stroke="url(#arrowLaser)" stroke-width="4.5" stroke-linecap="round" />
+          <!-- Arrow Kinetic Penetrator Head -->
+          <polygon points="168,111 185,120 168,129 172,120" fill="#ffffff" filter="drop-shadow(0 0 8px #34d399)" />
+        </svg>
+
+        <!-- Cyber Corner HUD Accents -->
+        <div class="absolute -top-3 -left-3 w-5 h-5 border-t-2 border-l-2 border-emerald-400"></div>
+        <div class="absolute -top-3 -right-3 w-5 h-5 border-t-2 border-r-2 border-emerald-400"></div>
+        <div class="absolute -bottom-3 -left-3 w-5 h-5 border-b-2 border-l-2 border-cyan-400"></div>
+        <div class="absolute -bottom-3 -right-3 w-5 h-5 border-b-2 border-r-2 border-cyan-400"></div>
+      </div>
+
+      <!-- Identity Typography -->
+      <div class="space-y-3">
+        <h1 class="text-6xl font-black tracking-widest text-white font-hud">
+          ARJUNA
+        </h1>
+        <div class="inline-block px-4 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/40 text-xs font-mono-code font-bold text-emerald-400 tracking-widest">
+          SYSTEM IDENT: AI-SIC // SHORT INTERVAL CONTROL
+        </div>
+        <p class="text-lg font-medium text-slate-300 tracking-wider max-w-xl mx-auto pt-2">
+          <span class="text-emerald-400 font-bold">A</span>dvanced 
+          <span class="text-emerald-400 font-bold">R</span>esource, 
+          <span class="text-emerald-400 font-bold">J</span>ob, and 
+          <span class="text-emerald-400 font-bold">U</span>tility 
+          <span class="text-emerald-400 font-bold">N</span>avigation 
+          <span class="text-emerald-400 font-bold">A</span>lgorithm
+        </p>
+        <p class="text-xs text-slate-500 font-mono-code uppercase tracking-widest">Hindustan Zinc Limited • Autonomous Core v2.4</p>
+      </div>
+
+      <button onclick="playChirp(); goToLogin()" class="mt-8 px-10 py-3.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-slate-950 font-black font-hud text-xs tracking-widest uppercase shadow-lg shadow-emerald-500/25 transition transform hover:scale-105 active:scale-95">
+        Initialize Control Room Login &rarr;
+      </button>
+
+      <div class="text-[11px] text-slate-600 font-mono-code">Benchmark Trajectory: 51T &rarr; 60T Metal / Person / Year</div>
+    </div>
+  </section>
+
+  <!-- ============================================================== -->
+  <!-- 2. SHIFT-AWARE AUTHENTICATION PORTAL                           -->
+  <!-- ============================================================== -->
+  <section id="login-screen" class="hidden fixed inset-0 z-40 bg-slate-950/95 backdrop-blur-xl flex items-center justify-center p-4">
+    <div class="w-full max-w-md hud-border rounded-2xl p-8 shadow-2xl space-y-6 glow-box-emerald">
+      
+      <div class="flex items-center space-x-3.5 border-b border-slate-800 pb-4">
+        <div class="h-10 w-10 rounded-lg bg-emerald-500/10 border border-emerald-500/40 flex items-center justify-center font-black text-emerald-400 text-lg font-hud">A</div>
+        <div>
+          <h2 class="text-lg font-bold text-white font-hud tracking-wide">SECURE ACCESS</h2>
+          <p class="text-xs text-slate-400 font-mono-code">Short Interval Control Dispatcher Auth</p>
+        </div>
+      </div>
+
+      <form onsubmit="handleLogin(event)" class="space-y-4 text-xs font-sans">
+        <div>
+          <label class="block text-slate-400 font-bold mb-1 uppercase text-[10px] tracking-widest font-hud">Mine Unit Division</label>
+          <select class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3.5 py-2.5 text-slate-200 focus:outline-none focus:border-emerald-500 font-mono-code text-xs">
+            <option>Mine Unit 01 (Deep Ore Zone)</option>
+            <option>Mine Unit 02 (North Declines)</option>
+            <option>Mine Unit 03 (Central Baroi)</option>
+          </select>
+        </div>
+
+        <div>
+          <div class="flex justify-between items-center mb-1">
+            <label class="block text-slate-400 font-bold uppercase text-[10px] tracking-widest font-hud">Shift Schedule</label>
+            <span class="text-[10px] text-emerald-400 font-mono-code font-bold" id="auto-detected-label">Auto-Detected</span>
+          </div>
+          <select id="shift-select" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3.5 py-2.5 text-slate-200 focus:outline-none focus:border-emerald-500 font-mono-code text-xs font-bold">
+            <option value="SHIFT_A">Shift A: 08:00 AM – 04:00 PM (Day Shift)</option>
+            <option value="SHIFT_B">Shift B: 04:00 PM – 12:00 AM (Evening Shift)</option>
+            <option value="SHIFT_C">Shift C: 12:00 AM – 08:00 AM (Night Shift)</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-slate-400 font-bold mb-1 uppercase text-[10px] tracking-widest font-hud">Operator Call-Sign / ID</label>
+          <input type="text" value="HZL-OP-4481" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3.5 py-2.5 text-emerald-400 font-bold focus:outline-none focus:border-emerald-500 font-mono-code text-xs" />
+        </div>
+
+        <div>
+          <label class="block text-slate-400 font-bold mb-1 uppercase text-[10px] tracking-widest font-hud">Authorization Key</label>
+          <input type="password" value="••••••••••••" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3.5 py-2.5 text-slate-200 focus:outline-none focus:border-emerald-500 font-mono-code text-xs" />
+        </div>
+
+        <div class="pt-2">
+          <button type="submit" class="w-full py-3 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black font-hud text-xs uppercase tracking-widest transition shadow-lg shadow-emerald-500/30 active:scale-95">
+            Authorize & Launch Cockpit
+          </button>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <!-- ============================================================== -->
+  <!-- 3. ADVANCED C4ISR SHORT INTERVAL CONTROL COCKPIT               -->
+  <!-- ============================================================== -->
+  <div id="dashboard-screen" class="hidden">
+    <!-- Top HUD App Bar -->
+    <header class="border-b border-slate-800/80 bg-slate-950/90 px-6 py-3 sticky top-0 z-30 backdrop-blur-md flex justify-between items-center">
+      <div class="flex items-center space-x-4">
+        <div class="h-10 w-10 rounded-lg bg-gradient-to-tr from-emerald-600 to-teal-400 p-0.5 shadow-lg shadow-emerald-500/20">
+          <div class="w-full h-full bg-slate-950 rounded-[6px] flex items-center justify-center font-black text-emerald-400 font-hud text-base">A</div>
+        </div>
+        <div>
+          <div class="flex items-center gap-2.5">
+            <h1 class="text-xl font-black text-white font-hud tracking-wider">ARJUNA</h1>
+            <span class="text-[9px] uppercase font-mono-code font-bold tracking-widest px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 animate-pulse">
+              ● SIC CORE ONLINE
+            </span>
+            <span class="text-xs text-slate-400 font-mono-code">HZL MINE CONTROL ROOM</span>
+          </div>
+          <p class="text-[11px] text-slate-400 font-mono-code">Advanced Resource, Job, and Utility Navigation Algorithm</p>
+        </div>
+      </div>
+      
+      <div class="flex items-center space-x-6">
+        <div class="text-right">
+          <span class="text-slate-400 uppercase tracking-widest block text-[10px] font-bold font-hud" id="active-shift-header">Shift Execution</span>
+          <span class="font-mono-code text-emerald-400 font-bold text-sm" id="shift-clock">03h 45m / 08h 00m</span>
+        </div>
+        <button onclick="playChirp(); fetchPlatformData()" class="px-4 py-2 rounded-lg bg-slate-900 border border-emerald-500/40 hover:bg-emerald-500/10 text-emerald-300 font-mono-code text-xs font-bold transition flex items-center gap-2 shadow-sm">
+          <svg class="w-3.5 h-3.5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+          SYNC TELEMETRY
+        </button>
+        <button onclick="logout()" class="px-3 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-slate-200 text-xs font-mono-code transition">
+          EXIT
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Viewport Content -->
+    <main class="p-6 max-w-[1680px] mx-auto space-y-6">
+
+      <!-- PRIMARY NORTH STAR KPI HERO CARD -->
+      <section class="p-6 rounded-2xl hud-border glow-box-emerald relative overflow-hidden">
+        <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+          <div class="space-y-1">
+            <div class="text-[11px] font-bold text-emerald-400 uppercase tracking-widest font-hud">Target Objective • Problem Brief Directive</div>
+            <h2 class="text-3xl font-black text-white font-hud tracking-tight">Metal Production Velocity per Person</h2>
+            <p class="text-xs text-slate-400 max-w-2xl font-mono-code">
+              Dynamic Short Interval Control eliminates face starvation and turnaround bottlenecks to lift output from baseline <span class="text-slate-200 font-bold">51 T/person/yr</span> to target <span class="text-emerald-400 font-bold">60 T/person/yr</span>.
+            </p>
+          </div>
+
+          <div class="flex items-center gap-6 bg-slate-950/80 p-4 rounded-xl border border-slate-800">
+            <div>
+              <div class="text-[10px] font-bold text-slate-400 uppercase font-hud">Current Run-Rate</div>
+              <div class="text-4xl font-black text-emerald-400 tracking-tight font-hud" id="primary-kpi-val">58.6</div>
+              <div class="text-[10px] text-slate-400 font-mono-code">T METAL / PERSON / YEAR</div>
+            </div>
+            <div class="h-10 w-px bg-slate-800"></div>
+            <div>
+              <div class="text-[10px] font-bold text-slate-400 uppercase font-hud">Target Velocity</div>
+              <div class="text-4xl font-black text-white tracking-tight font-hud">60.0</div>
+              <div class="text-[10px] text-emerald-400 font-mono-code font-bold">+17.6% TRAJECTORY</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECONDARY OPERATIONAL METRICS -->
+      <section class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3.5">
+        <div class="p-3.5 rounded-xl hud-border">
+          <div class="text-[11px] font-bold text-slate-400 uppercase font-hud">Physical Avail.</div>
+          <div class="text-xl font-bold text-white mt-1 font-mono-code" id="sec-pa">88.5%</div>
+          <div class="text-[10px] text-emerald-400 font-mono-code mt-0.5">Target: +5%</div>
+        </div>
+        <div class="p-3.5 rounded-xl hud-border">
+          <div class="text-[11px] font-bold text-slate-400 uppercase font-hud">Fleet Util.</div>
+          <div class="text-xl font-bold text-emerald-400 mt-1 font-mono-code" id="sec-eu">78.2%</div>
+          <div class="text-[10px] text-emerald-400 font-mono-code mt-0.5">Target: +15%</div>
+        </div>
+        <div class="p-3.5 rounded-xl hud-border">
+          <div class="text-[11px] font-bold text-slate-400 uppercase font-hud">Face Util.</div>
+          <div class="text-xl font-bold text-cyan-400 mt-1 font-mono-code" id="sec-fu">81.4%</div>
+          <div class="text-[10px] text-cyan-400 font-mono-code mt-0.5">Target: +15%</div>
+        </div>
+        <div class="p-3.5 rounded-xl hud-border">
+          <div class="text-[11px] font-bold text-slate-400 uppercase font-hud">LHD Prod.</div>
+          <div class="text-xl font-bold text-white mt-1 font-mono-code" id="sec-lhd">5.8 hrs</div>
+          <div class="text-[10px] text-emerald-400 font-mono-code mt-0.5">Target: +15%</div>
+        </div>
+        <div class="p-3.5 rounded-xl hud-border">
+          <div class="text-[11px] font-bold text-slate-400 uppercase font-hud">Truck Prod.</div>
+          <div class="text-xl font-bold text-white mt-1 font-mono-code" id="sec-trk">6.1 hrs</div>
+          <div class="text-[10px] text-emerald-400 font-mono-code mt-0.5">Target: +15%</div>
+        </div>
+        <div class="p-3.5 rounded-xl hud-border">
+          <div class="text-[11px] font-bold text-slate-400 uppercase font-hud">Dev Advance</div>
+          <div class="text-xl font-bold text-indigo-400 mt-1 font-mono-code" id="sec-dev">96.5%</div>
+          <div class="text-[10px] text-indigo-400 font-mono-code mt-0.5">Target: >95%</div>
+        </div>
+        <div class="p-3.5 rounded-xl hud-border">
+          <div class="text-[11px] font-bold text-slate-400 uppercase font-hud">Idle Reduction</div>
+          <div class="text-xl font-bold text-amber-400 mt-1 font-mono-code" id="sec-idle">-22.6%</div>
+          <div class="text-[10px] text-amber-400 font-mono-code mt-0.5">Target: -20%</div>
+        </div>
+      </section>
+
+      <!-- PRESCRIPTIVE ACTION CARDS (HUMAN-IN-THE-LOOP) -->
+      <section class="p-5 rounded-2xl hud-border space-y-3">
+        <div class="flex justify-between items-center">
+          <div>
+            <h3 class="text-sm font-bold text-white font-hud flex items-center gap-2">
+              <span class="h-2.5 w-2.5 rounded-full bg-rose-500 animate-ping"></span>
+              ARJUNA PRESCRIPTIVE RECOVERY INTERVENTIONS
+            </h3>
+            <p class="text-xs text-slate-400 font-mono-code">Constrained Hungarian/MILP Optimization • Human Authorization Mandated</p>
+          </div>
+          <span class="text-xs font-mono-code text-emerald-400 uppercase font-bold">● Supervisor Control Active</span>
+        </div>
+        <div id="action-cards" class="space-y-3 pt-2">
+          <!-- Dynamic Action Cards Injected Here -->
+        </div>
+      </section>
+
+      <!-- PLAN VS ACTUAL & ESCALATION MATRIX -->
+      <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Production Trajectory Chart (2 cols) -->
+        <div class="lg:col-span-2 p-5 rounded-2xl hud-border flex flex-col justify-between">
+          <div class="flex justify-between items-center mb-4">
+            <div>
+              <h3 class="text-sm font-bold text-white font-hud">Dynamic Plan vs. Actual Production Trajectory</h3>
+              <p class="text-xs text-slate-400 font-mono-code">15-Minute Short Interval Cumulative Ore Haulage (Tonnes)</p>
+            </div>
+            <div class="flex items-center gap-4 text-xs font-mono-code">
+              <span class="text-slate-400">Planned: <strong class="text-white" id="plan-t">740 T</strong></span>
+              <span class="text-slate-400">Actual: <strong class="text-emerald-400" id="actual-t">655 T</strong></span>
+            </div>
+          </div>
+          <div class="h-64 w-full">
+            <canvas id="planActualChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Tiered Escalation Matrix (1 col) -->
+        <div class="p-5 rounded-2xl hud-border flex flex-col">
+          <div class="flex justify-between items-center mb-2">
+            <h3 class="text-sm font-bold text-white font-hud">Escalation Protocol</h3>
+            <span class="text-[9px] uppercase font-bold text-rose-400 bg-rose-500/10 border border-rose-500/30 px-2 py-0.5 rounded font-mono-code">Auto-Trigger</span>
+          </div>
+          <p class="text-xs text-slate-400 mb-3 font-mono-code">Tiered notifications mapped to delay severity.</p>
+          <div id="escalation-list" class="space-y-2.5 overflow-y-auto max-h-64 pr-1 font-mono-code text-xs">
+            <!-- Escalation events injected here -->
+          </div>
+        </div>
+      </section>
+
+      <!-- FACE CYCLE PIPELINE & REAL-TIME TELEMETRY FEED -->
+      <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Face Cycles (2 cols) -->
+        <div class="lg:col-span-2 p-5 rounded-2xl hud-border space-y-4">
+          <div class="flex justify-between items-center">
+            <div>
+              <h3 class="text-sm font-bold text-white font-hud">Underground Face State Machine</h3>
+              <p class="text-xs text-slate-400 font-mono-code">Drill &rarr; Blast &rarr; Clear &rarr; Muck &rarr; Bolt Cycle Monitor</p>
+            </div>
+            <span class="text-xs text-slate-400 font-mono-code font-bold">5 Active Faces</span>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-slate-900/80 uppercase text-slate-400 border-b border-slate-800 font-hud text-[10px]">
+                <tr>
+                  <th class="p-3">Face ID</th>
+                  <th class="p-3">Level</th>
+                  <th class="p-3">Current Cycle Stage</th>
+                  <th class="p-3">Progress</th>
+                  <th class="p-3">Stockpile</th>
+                  <th class="p-3">Grade</th>
+                  <th class="p-3">Condition</th>
+                </tr>
+              </thead>
+              <tbody id="face-table" class="divide-y divide-slate-800/80 font-mono-code">
+                <!-- Face rows injected here -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Loss Categorization & Telemetry Console (1 col) -->
+        <div class="p-5 rounded-2xl hud-border space-y-4 flex flex-col justify-between">
+          <div>
+            <div class="flex justify-between items-center mb-1">
+              <h3 class="text-sm font-bold text-white font-hud">Loss Diagnostics</h3>
+              <span class="text-[9px] uppercase font-bold text-amber-400 font-mono-code">SIC Latency Engine</span>
+            </div>
+            <p class="text-xs text-slate-400 mb-3 font-mono-code">Productivity penalties itemized by root-cause.</p>
+            <div id="loss-categories" class="space-y-2.5 overflow-y-auto max-h-48 font-mono-code text-xs">
+              <!-- Categorized losses injected here -->
+            </div>
+          </div>
+
+          <!-- Live Telemetry Stream Widget -->
+          <div class="mt-4 pt-3 border-t border-slate-800">
+            <div class="text-[10px] uppercase font-bold text-slate-400 font-hud mb-1.5 flex items-center justify-between">
+              <span>Underground Telemetry Stream</span>
+              <span class="text-emerald-400 font-mono-code">100 Hz Ingestion</span>
+            </div>
+            <div id="telemetry-feed" class="h-20 bg-slate-950 p-2.5 rounded-lg border border-slate-800 font-mono-code text-[11px] text-slate-400 overflow-hidden space-y-1">
+              <div class="text-emerald-400">&gt; [13:37:10] LHD-01 bucket payload: 14.2 T at -380 mRL</div>
+              <div class="text-slate-300">&gt; [13:37:14] TRK-01 weighbridge scan: 50.4 T net ore</div>
+              <div class="text-cyan-400">&gt; [13:37:19] JMB-01 drill round 14/48 complete (Face 420-N)</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- ============================================================== -->
+  <!-- JAVASCRIPT: LOGIC & AUDIO-TACTILE CONTROLS                     -->
+  <!-- ============================================================== -->
+  <script>
+    let chartInstance = null;
+    let currentShift = 'SHIFT_A';
+
+    // Synthesize Tactical Cybernetic Chirp Audio (Web Audio API)
+    function playChirp() {
+      try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.08);
+        gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.08);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.08);
+      } catch (e) {
+        // Fallback gracefully if audio context is blocked
+      }
+    }
+
+    // 1. Shift Auto-Detection Logic based on Local Time
+    function detectCurrentShift() {
+      const now = new Date();
+      const hours = now.getHours();
+
+      if (hours >= 8 && hours < 16) {
+        return { id: 'SHIFT_A', label: 'Shift A (08:00 AM – 04:00 PM)' };
+      } else if (hours >= 16 && hours < 24) {
+        return { id: 'SHIFT_B', label: 'Shift B (04:00 PM – 12:00 AM)' };
+      } else {
+        return { id: 'SHIFT_C', label: 'Shift C (12:00 AM – 08:00 AM)' };
+      }
+    }
+
+    function initShiftSelector() {
+      const detected = detectCurrentShift();
+      const selectElem = document.getElementById('shift-select');
+      selectElem.value = detected.id;
+      currentShift = detected.id;
+      document.getElementById('auto-detected-label').innerText = `Auto: ${detected.label.split(' ')[0]} ${detected.label.split(' ')[1]}`;
+    }
+
+    function goToLogin() {
+      document.getElementById('splash-screen').classList.add('opacity-0');
+      setTimeout(() => {
+        document.getElementById('splash-screen').classList.add('hidden');
+        document.getElementById('login-screen').classList.remove('hidden');
+      }, 500);
+    }
+
+    function handleLogin(e) {
+      e.preventDefault();
+      playChirp();
+      const selectElem = document.getElementById('shift-select');
+      currentShift = selectElem.value;
+      const shiftText = selectElem.options[selectElem.selectedIndex].text;
+
+      document.getElementById('active-shift-header').innerText = shiftText.split(':')[0] + ' EXECUTION';
+
+      document.getElementById('login-screen').classList.add('hidden');
+      document.getElementById('dashboard-screen').classList.remove('hidden');
+
+      initChart();
+      fetchPlatformData();
+      setInterval(fetchPlatformData, 5000);
+      setInterval(pushTelemetryLine, 3500);
+    }
+
+    function logout() {
+      document.getElementById('dashboard-screen').classList.add('hidden');
+      document.getElementById('splash-screen').classList.remove('opacity-0', 'hidden');
+    }
+
+    // Chart Configuration with Sci-Fi Gradients
+    function initChart() {
+      if (chartInstance) return;
+      const ctx = document.getElementById('planActualChart').getContext('2d');
+      chartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: ['00:00', '01:00', '02:00', '03:00', '03:45', '05:00', '06:00', '07:00', '08:00'],
+          datasets: [
+            {
+              label: 'Planned Target (T)',
+              data: [0, 95, 190, 285, 360, 480, 580, 670, 740],
+              borderColor: '#475569',
+              borderDash: [5, 5],
+              borderWidth: 2,
+              pointRadius: 0
+            },
+            {
+              label: 'Actual Mucked Tonnes',
+              data: [0, 85, 170, 250, 325, null, null, null, null],
+              borderColor: '#10b981',
+              backgroundColor: 'rgba(16, 185, 129, 0.12)',
+              fill: true,
+              borderWidth: 3,
+              tension: 0.25,
+              pointBackgroundColor: '#10b981'
+            },
+            {
+              label: 'Projected Recovery (ARJUNA)',
+              data: [null, null, null, null, 325, 475, 590, 690, 755],
+              borderColor: '#06b6d4',
+              borderDash: [4, 4],
+              borderWidth: 2.5,
+              pointRadius: 0
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { 
+            legend: { labels: { color: '#94a3b8', font: { family: 'JetBrains Mono', size: 11 } } } 
+          },
+          scales: {
+            x: { grid: { color: '#1e293b' }, ticks: { color: '#64748b', font: { family: 'JetBrains Mono' } } },
+            y: { grid: { color: '#1e293b' }, ticks: { color: '#64748b', font: { family: 'JetBrains Mono' } } }
+          }
+        }
+      });
+    }
+
+    // Telemetry Sync
+    async function fetchPlatformData() {
+      try {
+        const [kpis, faces, equipment, bottlenecks, escalations, actions] = await Promise.all([
+          fetch('/api/kpis').then(r => r.json()),
+          fetch('/api/faces').then(r => r.json()),
+          fetch('/api/equipment').then(r => r.json()),
+          fetch('/api/bottlenecks').then(r => r.json()),
+          fetch('/api/escalations').then(r => r.json()),
+          fetch('/api/actions').then(r => r.json())
+        ]);
+
+        // KPIs
+        document.getElementById('primary-kpi-val').innerText = kpis.metal_production_per_person;
+        document.getElementById('sec-pa').innerText = kpis.equipment_physical_availability_pct + '%';
+        document.getElementById('sec-eu').innerText = kpis.equipment_utilization_pct + '%';
+        document.getElementById('sec-fu').innerText = kpis.face_utilization_pct + '%';
+        document.getElementById('sec-lhd').innerText = kpis.lhd_productive_hours + ' hrs';
+        document.getElementById('sec-trk').innerText = kpis.truck_productive_hours + ' hrs';
+        document.getElementById('sec-dev').innerText = kpis.development_advance_compliance_pct + '%';
+        document.getElementById('sec-idle').innerText = kpis.equipment_idle_time_reduction_pct + '%';
+        document.getElementById('plan-t').innerText = kpis.planned_tonnes + ' T';
+        document.getElementById('actual-t').innerText = kpis.actual_tonnes + ' T';
+
+        // Action Cards
+        const actionBox = document.getElementById('action-cards');
+        actionBox.innerHTML = '';
+        actions.forEach(a => {
+          const isApproved = a.status === 'APPROVED';
+          actionBox.innerHTML += `
+            <div class="p-4 rounded-xl bg-slate-900/90 border ${isApproved ? 'border-emerald-500/40' : 'border-slate-700'} flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+              <div class="space-y-1 max-w-4xl">
+                <div class="flex items-center gap-2.5">
+                  <span class="font-hud font-bold text-white text-xs">${a.id}</span>
+                  <span class="text-[9px] font-bold px-2 py-0.5 rounded font-mono-code ${a.priority === 'CRITICAL' ? 'bg-rose-500/20 text-rose-400 border border-rose-500/40' : 'bg-amber-500/20 text-amber-400 border border-amber-500/40'}">${a.priority}</span>
+                  <span class="text-xs text-emerald-400 font-mono-code font-bold">+${a.impact_tonnes}T Ore (+${a.impact_metal_kg} kg Metal Gain)</span>
+                </div>
+                <div class="text-xs text-slate-300 font-sans"><strong class="text-rose-400 font-mono-code">ANOMALY:</strong> ${a.issue}</div>
+                <div class="text-xs text-emerald-300 font-sans"><strong class="text-emerald-400 font-mono-code">ARJUNA DIRECTIVE:</strong> ${a.recommendation}</div>
+              </div>
+              <div class="w-full md:w-auto">
+                ${isApproved ? 
+                  `<span class="block text-center px-5 py-2.5 rounded-lg bg-emerald-500/20 border border-emerald-500/50 text-emerald-300 font-black font-hud text-xs tracking-wider">EXECUTED & DISPATCHED</span>` :
+                  `<button onclick="executeAction('${a.id}')" class="w-full md:w-auto px-6 py-2.5 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-slate-950 font-black font-hud text-xs tracking-widest uppercase transition shadow-lg shadow-emerald-500/25 active:scale-95">
+                    Authorize Re-dispatch
+                  </button>`
+                }
+              </div>
+            </div>
+          `;
+        });
+
+        // Faces Table with Visual Stepper Progress
+        const faceTable = document.getElementById('face-table');
+        faceTable.innerHTML = '';
+        faces.forEach(f => {
+          const pct = Math.min(100, Math.round((f.stage_elapsed_min / f.cycle_time_expected_min) * 100));
+          faceTable.innerHTML += `
+            <tr class="hover:bg-slate-800/40 transition">
+              <td class="p-3 font-bold text-white font-hud">${f.id}</td>
+              <td class="p-3 text-slate-400 font-mono-code">${f.level}</td>
+              <td class="p-3"><span class="px-2 py-0.5 rounded bg-slate-900 border border-slate-700 text-slate-300 font-bold">${f.stage}</span></td>
+              <td class="p-3">
+                <div class="w-32">
+                  <div class="flex justify-between text-[10px] text-slate-400 mb-1">
+                    <span>${f.stage_elapsed_min}m</span>
+                    <span>${f.cycle_time_expected_min}m</span>
+                  </div>
+                  <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                    <div class="h-full ${pct > 100 ? 'bg-rose-500' : 'bg-emerald-500'}" style="width: ${Math.min(100, pct)}%"></div>
+                  </div>
+                </div>
+              </td>
+              <td class="p-3 text-slate-300 font-bold">${f.tonnage_available} T</td>
+              <td class="p-3 text-emerald-400 font-bold">${f.ore_grade_pct}%</td>
+              <td class="p-3">
+                ${f.is_starved ? 
+                  `<span class="text-rose-400 font-bold flex items-center gap-1.5"><span class="h-2 w-2 rounded-full bg-rose-500 animate-ping"></span> STARVED</span>` : 
+                  `<span class="text-emerald-400 font-semibold flex items-center gap-1.5"><span class="h-2 w-2 rounded-full bg-emerald-500"></span> ACTIVE</span>`
+                }
+              </td>
+            </tr>
+          `;
+        });
+
+        // Escalations
+        const escBox = document.getElementById('escalation-list');
+        escBox.innerHTML = '';
+        escalations.forEach(e => {
+          escBox.innerHTML += `
+            <div class="p-2.5 rounded-lg bg-slate-900/80 border border-slate-800 space-y-1">
+              <div class="flex justify-between items-center text-[10px]">
+                <span class="text-rose-400 font-bold font-hud">${e.tier}</span>
+                <span class="text-slate-500 font-mono-code">${e.timestamp}</span>
+              </div>
+              <div class="text-slate-200 font-sans text-xs">${e.message}</div>
+              <div class="text-[10px] text-slate-400"><strong class="text-slate-300">Action:</strong> ${e.action_required}</div>
+            </div>
+          `;
+        });
+
+        // Bottlenecks
+        const lossBox = document.getElementById('loss-categories');
+        lossBox.innerHTML = '';
+        bottlenecks.forEach(b => {
+          let badgeColor = "text-amber-400 bg-amber-500/10 border-amber-500/30";
+          if (b.category === "MECHANICAL") badgeColor = "text-rose-400 bg-rose-500/10 border-rose-500/30";
+          if (b.category === "ENVIRONMENTAL") badgeColor = "text-cyan-400 bg-cyan-500/10 border-cyan-500/30";
+          if (b.category === "LOGISTICS") badgeColor = "text-indigo-400 bg-indigo-500/10 border-indigo-500/30";
+
+          lossBox.innerHTML += `
+            <div class="p-2.5 rounded-lg bg-slate-900/80 border border-slate-800 flex justify-between items-start gap-2">
+              <div>
+                <span class="text-[9px] uppercase px-1.5 py-0.5 rounded font-bold border ${badgeColor}">${b.category}</span>
+                <div class="text-slate-300 font-sans text-xs mt-1">${b.root_cause}</div>
+                <div class="text-[10px] text-slate-500 mt-0.5 font-mono-code">${b.affected_equipment}</div>
+              </div>
+              <div class="text-right whitespace-nowrap">
+                <span class="text-rose-400 font-bold block">-${b.lost_tonnes} T</span>
+                <span class="text-[10px] text-slate-500">${b.lost_minutes}m loss</span>
+              </div>
+            </div>
+          `;
+        });
+
+      } catch (err) {
+        console.error("Telemetry sync failed:", err);
+      }
+    }
+
+    async function executeAction(actionId) {
+      playChirp();
+      await fetch(`/api/actions/${actionId}/approve`, { method: 'POST' });
+      await fetchPlatformData();
+    }
+
+    // Simulated Real-Time Underground Telemetry Stream Line
+    function pushTelemetryLine() {
+      const feed = document.getElementById('telemetry-feed');
+      if (!feed) return;
+      const msgs = [
+        "<span class='text-emerald-400'>&gt; [HEMM-BEACON] TRK-03 passed Wi-Fi AP-42 (-420 mRL)</span>",
+        "<span class='text-cyan-400'>&gt; [SCADA-PUMP] Sump pump SP-03 duty cycle 84% normal</span>",
+        "<span class='text-slate-300'>&gt; [VENT-TELEMETRY] Velocity at Heading F-460-W: 0.62 m/s</span>",
+        "<span class='text-amber-400'>&gt; [LOAD-SCAN] Shaft pocket bin loading cycle: 18.2 T</span>"
+      ];
+      const line = document.createElement('div');
+      line.innerHTML = msgs[Math.floor(Math.random() * msgs.length)];
+      feed.appendChild(line);
+      if (feed.children.length > 4) {
+        feed.removeChild(feed.children[0]);
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      initShiftSelector();
+    });
+  </script>
+</body>
+</html>
