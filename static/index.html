@@ -23,7 +23,7 @@
     .hud-border {
       position: relative;
       border: 1px solid rgba(51, 65, 85, 0.7);
-      background: rgba(15, 23, 42, 0.8);
+      background: rgba(15, 23, 42, 0.85);
       backdrop-filter: blur(12px);
     }
     .hud-border::before {
@@ -45,8 +45,8 @@
       <!-- Insignia -->
       <div class="relative w-48 h-48 flex items-center justify-center">
         <div class="absolute inset-0 rounded-full bg-emerald-500/20 blur-3xl animate-pulse"></div>
-        <svg class="w-44 h-44 relative z-10" viewBox="0 0 200 200" fill="none">
-          <circle cx="100" cy="100" r="88" stroke="#10b981" stroke-width="1.5" stroke-opacity="0.3" stroke-dasharray="6 6" />
+        <svg class="w-44 h-44 relative z-10 filter drop-shadow-[0_0_15px_rgba(16,185,129,0.35)]" viewBox="0 0 200 200" fill="none">
+          <circle cx="100" cy="100" r="88" stroke="#10b981" stroke-width="1.2" stroke-opacity="0.3" stroke-dasharray="8 6 2 6" />
           <path d="M 64 165 C 22 135 22 65 64 35" stroke="#10b981" stroke-width="5" stroke-linecap="round" />
           <circle cx="130" cy="100" r="30" stroke="#06b6d4" stroke-width="1.5" stroke-opacity="0.6" stroke-dasharray="8 4" />
           <line x1="52" y1="100" x2="145" y2="100" stroke="#34d399" stroke-width="4" stroke-linecap="round" />
@@ -74,11 +74,11 @@
         Initialize Control Room Login &rarr;
       </button>
 
-      <div class="text-[11px] text-slate-500 font-mono-code">Core Objective: 51T &rarr; 60T Metal / Person / Year</div>
+      <div class="text-[11px] text-slate-500 font-mono-code">Core Directive: 51T &rarr; 60T Metal / Person / Year</div>
     </div>
   </section>
 
-  <!-- 2. SHIFT-AWARE LOGIN SCREEN -->
+  <!-- 2. SHIFT-AWARE AUTHENTICATION SCREEN -->
   <section id="login-screen" class="hidden fixed inset-0 z-40 bg-slate-950/95 backdrop-blur-xl flex items-center justify-center p-4">
     <div class="w-full max-w-md hud-border rounded-2xl p-8 shadow-2xl space-y-6">
       <div class="flex items-center space-x-3.5 border-b border-slate-800 pb-4">
@@ -160,26 +160,26 @@
 
     <main class="p-6 max-w-[1680px] mx-auto space-y-6">
 
-      <!-- NORTH STAR KPI BANNER WITH LIVE COMPUTATION -->
+      <!-- PRIMARY KPI HERO: LIVE COMPUTED RUN-RATE -->
       <section class="p-6 rounded-2xl hud-border relative overflow-hidden">
         <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
           <div class="space-y-1">
-            <div class="text-[11px] font-bold text-emerald-400 uppercase tracking-widest font-hud">Primary Objective • Hackathon Target</div>
+            <div class="text-[11px] font-bold text-emerald-400 uppercase tracking-widest font-hud">Primary Objective • Problem Brief Target</div>
             <h2 class="text-3xl font-black text-white font-hud tracking-tight">Metal Production Velocity per Person</h2>
             <p class="text-xs text-slate-400 max-w-2xl font-mono-code">
-              Dynamic Short Interval Control eliminates face starvation and turnaround bottlenecks to lift output from baseline <span class="text-slate-200 font-bold">51 T/person/yr</span> to target <span class="text-emerald-400 font-bold">60 T/person/yr</span>.
+              Continuous short-interval recovery of face turnaround delays and fleet starvation drives annual output from baseline <span class="text-slate-200 font-bold">51 T/person/yr</span> to target <span class="text-emerald-400 font-bold">60 T/person/yr</span>.
             </p>
           </div>
 
           <div class="flex items-center gap-6 bg-slate-950/80 p-4 rounded-xl border border-slate-800">
             <div>
-              <div class="text-[10px] font-bold text-slate-400 uppercase font-hud">Current Trajectory</div>
+              <div class="text-[10px] font-bold text-slate-400 uppercase font-hud">Live Run-Rate</div>
               <div class="text-4xl font-black text-emerald-400 tracking-tight font-hud" id="primary-kpi-val">58.6</div>
               <div class="text-[10px] text-slate-400 font-mono-code">T METAL / PERSON / YEAR</div>
             </div>
             <div class="h-10 w-px bg-slate-800"></div>
             <div>
-              <div class="text-[10px] font-bold text-slate-400 uppercase font-hud">Target Benchmark</div>
+              <div class="text-[10px] font-bold text-slate-400 uppercase font-hud">Target Velocity</div>
               <div class="text-4xl font-black text-white tracking-tight font-hud">60.0</div>
               <div class="text-[10px] text-emerald-400 font-mono-code font-bold">+17.6% TRAJECTORY</div>
             </div>
@@ -187,7 +187,7 @@
         </div>
       </section>
 
-      <!-- SECONDARY OPERATIONAL KPIS -->
+      <!-- SECONDARY KPIS -->
       <section class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3.5">
         <div class="p-3.5 rounded-xl hud-border">
           <div class="text-[11px] font-bold text-slate-400 uppercase font-hud">Physical Avail.</div>
@@ -226,7 +226,7 @@
         </div>
       </section>
 
-      <!-- PRESCRIPTIVE ACTION CARD (HUMAN-IN-THE-LOOP SAFEGUARD) -->
+      <!-- PRESCRIPTIVE ACTION CARD (HUMAN-IN-THE-LOOP) -->
       <section class="p-5 rounded-2xl hud-border space-y-3">
         <div class="flex justify-between items-center">
           <div>
@@ -234,14 +234,14 @@
               <span class="h-2.5 w-2.5 rounded-full bg-rose-500 animate-ping"></span>
               ARJUNA PRESCRIPTIVE RECOVERY INTERVENTIONS
             </h3>
-            <p class="text-xs text-slate-400 font-mono-code">Constrained Hungarian/MILP Optimization Engine</p>
+            <p class="text-xs text-slate-400 font-mono-code">Constrained Hungarian Optimization Assignment</p>
           </div>
           <span class="text-xs font-mono-code text-emerald-400 uppercase font-bold">● Supervisor Control Mandate</span>
         </div>
         <div id="action-cards" class="space-y-3 pt-2"></div>
       </section>
 
-      <!-- DYNAMIC PRODUCTION PROFILE & ESCALATION WORKFLOW -->
+      <!-- PLAN VS ACTUAL PRODUCTION TRAJECTORY & ESCALATIONS -->
       <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div class="lg:col-span-2 p-5 rounded-2xl hud-border flex flex-col justify-between">
           <div class="flex justify-between items-center mb-4">
@@ -269,13 +269,13 @@
         </div>
       </section>
 
-      <!-- UNDERGROUND FACE CYCLES & WORKFORCE/INFRASTRUCTURE TELEMETRY -->
+      <!-- FACE STATE MACHINE & WORKFORCE/INFRASTRUCTURE -->
       <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div class="lg:col-span-2 p-5 rounded-2xl hud-border space-y-4">
           <div class="flex justify-between items-center">
             <div>
               <h3 class="text-sm font-bold text-white font-hud">Underground Face State Machine</h3>
-              <p class="text-xs text-slate-400 font-mono-code">Cycle: Drill &rarr; Blast &rarr; Clear &rarr; Muck &rarr; Bolt</p>
+              <p class="text-xs text-slate-400 font-mono-code">Drilling &rarr; Charging &rarr; Fume Clearing &rarr; Mucking &rarr; Bolting</p>
             </div>
             <span class="text-xs text-slate-400 font-mono-code font-bold">5 Headings Monitored</span>
           </div>
@@ -297,18 +297,16 @@
           </div>
         </div>
 
-        <!-- WORKFORCE DEPLOYMENT & TELEMETRY FEEDS -->
         <div class="p-5 rounded-2xl hud-border space-y-4 flex flex-col justify-between">
           <div>
             <div class="flex justify-between items-center mb-1">
               <h3 class="text-sm font-bold text-white font-hud">Workforce Deployment</h3>
-              <span class="text-[9px] uppercase font-bold text-emerald-400 font-mono-code" id="total-deployed-badge">119 Deployed</span>
+              <span class="text-[9px] uppercase font-bold text-emerald-400 font-mono-code" id="total-deployed-badge">118 Deployed</span>
             </div>
             <p class="text-xs text-slate-400 mb-3 font-mono-code">Shift-wise personnel roster vs. active tasks.</p>
             <div id="workforce-list" class="space-y-2 font-mono-code text-xs"></div>
           </div>
 
-          <!-- Digital Telemetry Infrastructure Status -->
           <div class="pt-3 border-t border-slate-800 text-[11px] font-mono-code space-y-1.5">
             <div class="text-[10px] uppercase font-bold text-slate-400 font-hud mb-1">Infrastructure Telemetry Feed</div>
             <div class="flex justify-between text-slate-300">
@@ -401,7 +399,7 @@
         document.getElementById('sec-idle').innerText = kpis.equipment_idle_time_reduction_pct + '%';
         document.getElementById('actual-t').innerText = kpis.actual_tonnes + ' T';
 
-        // Action Cards
+        // Actions
         const actionBox = document.getElementById('action-cards');
         actionBox.innerHTML = '';
         actions.forEach(a => {
@@ -429,7 +427,7 @@
           `;
         });
 
-        // Face Table
+        // Faces
         const faceTable = document.getElementById('face-table');
         faceTable.innerHTML = '';
         faces.forEach(f => {
@@ -451,7 +449,7 @@
           `;
         });
 
-        // Workforce List
+        // Workforce
         const wfBox = document.getElementById('workforce-list');
         wfBox.innerHTML = '';
         workforce.forEach(w => {
